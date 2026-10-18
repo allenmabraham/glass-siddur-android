@@ -1,5 +1,6 @@
 package com.rowshr.siddur.clock
 
+import android.annotation.SuppressLint
 import android.icu.text.SimpleDateFormat
 import android.icu.util.Calendar
 import android.icu.util.HebrewCalendar
@@ -50,6 +51,7 @@ class JewishClock(
         val usedLocation: Boolean,
     )
 
+    @SuppressLint("SimpleDateFormat") // ICU formats with explicit locales and the Hebrew calendar on purpose
     fun moment(): Moment {
         val zone = now.zone
         val solar = location?.let { SolarCalculator(it, zone) }

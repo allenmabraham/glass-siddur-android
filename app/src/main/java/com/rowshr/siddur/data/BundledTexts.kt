@@ -19,8 +19,18 @@ import kotlinx.serialization.json.decodeFromStream
  */
 class BundledTexts(private val context: Context) {
     private val json = Json { ignoreUnknownKeys = true }
-    private val cache = HashMap<Nusach, Map<String, PrayerLeafText>>()
+    /** At most two decoded bundles stay in memory (a few MB each); the rest are re-read on demand. */
+    private val cache = object : LinkedHashMap<Nusach, Map<String, PrayerLeafText>>(4, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Nusach, Map<String, PrayerLeafText>>?) = size > 2
+    }
     private val mutex = Mutex()
+    private val counts: Map<Nusach, Int> by lazy {
+        runCatching {
+            val raw = context.assets.open("texts/counts.json").bufferedReader().use { it.readText() }
+            val decoded = json.decodeFromString(MapSerializer(String.serializer(), Int.serializer()), raw)
+            Nusach.entries.associateWith { decoded[it.resourceName] ?: 0 }
+        }.getOrDefault(emptyMap())
+    }
 
     /** Which siddur a Sefaria ref belongs to, from its leading title. */
     fun nusach(ref: String): Nusach? =
@@ -33,7 +43,11 @@ class BundledTexts(private val context: Context) {
 
     suspend fun contains(ref: String): Boolean = leaf(ref) != null
 
-    suspend fun count(nusach: Nusach): Int = texts(nusach).size
+    /** Number of bundled prayers, from a tiny index written alongside the texts. */
+    fun count(nusach: Nusach): Int = counts[nusach] ?: 0
+
+    /** Decodes a bundle ahead of time so the first prayer opens without a pause. */
+    suspend fun warm(nusach: Nusach) { texts(nusach) }
 
     /** Decodes a siddur's bundle once and keeps it in memory (a few MB each). */
     @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)

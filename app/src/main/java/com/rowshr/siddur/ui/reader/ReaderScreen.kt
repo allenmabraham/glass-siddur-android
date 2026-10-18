@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -66,7 +65,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -98,6 +96,7 @@ import com.rowshr.siddur.ui.components.SectionHeading
 import com.rowshr.siddur.ui.components.SurfaceCard
 import com.rowshr.siddur.ui.components.glassBorder
 import com.rowshr.siddur.ui.components.glassColor
+import com.rowshr.siddur.ui.components.pinchToZoom
 import com.rowshr.siddur.ui.theme.Brand
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -150,17 +149,12 @@ fun ReaderScreen(nav: NavHostController, nusach: Nusach, id: String) {
 
     KeepScreenAwake(settings.keepScreenAwake)
 
-    // Pinch anywhere on the page to resize the type.
-    var pinchBase by remember { mutableStateOf<Double?>(null) }
-    val pinch = Modifier.pointerInput(Unit) {
-        detectTransformGestures { _, _, zoom, _ ->
-            if (zoom != 1f) {
-                val base = pinchBase ?: settings.fontScale.also { pinchBase = it }
-                container.settings.setFontScale(base * zoom)
-                pinchBase = container.settings.state.value.fontScale
-            }
-        }
-    }
+    // Pinch anywhere on the page to resize the type; one finger still scrolls.
+    var pinchBase by remember { mutableStateOf(1.0) }
+    val pinch = Modifier.pinchToZoom(
+        onZoomStart = { pinchBase = container.settings.state.value.fontScale },
+        onZoom = { zoom -> container.settings.setFontScale(pinchBase * zoom) },
+    )
 
     Box(Modifier.fillMaxSize()) {
         Backdrop(BackdropStyle.READER)
@@ -392,7 +386,7 @@ private fun FacingPage(modifier: Modifier, node: SiddurNode, nusach: Nusach, blo
             }
         }
         if (blocks.size > 1) {
-            SectionHeading("Contents", "תוכן")
+            SectionHeading("Contents", hebrew = "תוכן")
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 blocks.forEach { block ->
                     Row(

@@ -1,6 +1,10 @@
 package com.rowshr.siddur.ui.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -68,6 +72,17 @@ fun SiddurTheme(theme: ReaderTheme, content: @Composable () -> Unit) {
         Appearance.LIGHT -> LightScheme
         Appearance.SEPIA -> SepiaScheme
         Appearance.DARK -> DarkScheme
+    }
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            (view.context as? Activity)?.window?.let { window ->
+                WindowCompat.getInsetsController(window, view).apply {
+                    isAppearanceLightStatusBars = appearance != Appearance.DARK
+                    isAppearanceLightNavigationBars = appearance != Appearance.DARK
+                }
+            }
+        }
     }
     CompositionLocalProvider(LocalAppearance provides appearance) {
         MaterialTheme(colorScheme = scheme, typography = SiddurTypography, content = content)

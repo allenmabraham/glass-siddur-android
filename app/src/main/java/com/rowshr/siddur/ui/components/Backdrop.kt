@@ -1,11 +1,10 @@
 package com.rowshr.siddur.ui.components
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -28,10 +27,17 @@ enum class BackdropStyle { HOME, READER }
 @Composable
 fun Backdrop(style: BackdropStyle, modifier: Modifier = Modifier) {
     val appearance = LocalAppearance.current
-    val drift = if (style == BackdropStyle.HOME) {
-        val transition = rememberInfiniteTransition(label = "backdrop")
-        transition.animateFloat(0f, 1f, infiniteRepeatable(tween(18_000, easing = LinearEasing), RepeatMode.Restart), label = "drift").value
-    } else 0f
+    // A gentle drift, redrawn twelve times a second rather than every frame: calm, and cheap on battery.
+    var drift by remember { mutableFloatStateOf(0f) }
+    if (style == BackdropStyle.HOME) {
+        LaunchedEffect(Unit) {
+            val start = System.nanoTime()
+            while (true) {
+                drift = ((System.nanoTime() - start) / 1e9f / 24f) % 1f
+                delay(83)
+            }
+        }
+    }
 
     val (base, blobs) = palette(style, appearance)
     Canvas(modifier.fillMaxSize()) {

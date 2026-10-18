@@ -95,7 +95,7 @@ fun GlassChip(
 
 /** Section heading used on Today and Browse. */
 @Composable
-fun SectionHeading(title: String, hebrew: String? = null, modifier: Modifier = Modifier) {
+fun SectionHeading(title: String, modifier: Modifier = Modifier, hebrew: String? = null) {
     Row(modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.Bottom) {
         Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
         if (hebrew != null) Text(hebrew, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -104,7 +104,7 @@ fun SectionHeading(title: String, hebrew: String? = null, modifier: Modifier = M
 
 /** A list row on the Browse screens: title, count, Hebrew title, chevron. */
 @Composable
-fun GlassRow(modifier: Modifier = Modifier, onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+fun GlassRow(onClick: () -> Unit, modifier: Modifier = Modifier, content: @Composable RowScope.() -> Unit) {
     val shape = RoundedCornerShape(18.dp)
     Row(
         modifier

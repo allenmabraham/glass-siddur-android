@@ -17,7 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -70,7 +70,8 @@ fun rememberFoldInfo(activity: Activity): State<FoldInfo> {
                 sensors?.getDefaultSensor(android.hardware.Sensor.TYPE_HINGE_ANGLE) != null
             )
     }
-    val widthDp = LocalConfiguration.current.screenWidthDp
+    val density = LocalDensity.current.density
+    val widthDp = (LocalWindowInfo.current.containerSize.width / density).toInt()
     return produceState(initialValue = FoldInfo(null, hasHinge, widthDp), activity, hasHinge, widthDp) {
         WindowInfoTracker.getOrCreate(activity).windowLayoutInfo(activity).collect {
             Log.i("Siddur.Fold", "window layout: ${it.displayFeatures} hinge=$hasHinge width=${widthDp}dp")

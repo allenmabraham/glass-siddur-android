@@ -53,7 +53,6 @@ import com.rowshr.siddur.ui.theme.Brand
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-import androidx.compose.runtime.produceState
 
 @Composable
 fun SettingsScreen(nav: NavHostController) {
@@ -63,7 +62,7 @@ fun SettingsScreen(nav: NavHostController) {
     val fold = LocalFoldInfo.current
     val uriHandler = LocalUriHandler.current
     val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted -> if (granted) container.location.refresh() }
-    val counts by produceState<Map<Nusach, Int>>(emptyMap()) { value = Nusach.entries.associateWith { container.bundled.count(it) } }
+    val counts = remember { Nusach.entries.associateWith { container.bundled.count(it) } }
 
     Box(Modifier.fillMaxSize()) {
         Backdrop(BackdropStyle.HOME)

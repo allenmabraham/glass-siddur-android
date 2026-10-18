@@ -22,9 +22,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -259,7 +256,7 @@ val ServiceSlot.icon: ImageVector
 
 /** Prominent call-to-action: brand-filled capsule. */
 @Composable
-fun BrandButton(text: String, icon: ImageVector? = null, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun BrandButton(text: String, modifier: Modifier = Modifier, icon: ImageVector? = null, onClick: () -> Unit) {
     Row(
         modifier
             .shadow(6.dp, CircleShape, spotColor = Brand.copy(alpha = 0.4f))
@@ -306,31 +303,31 @@ private fun ServicesGrid(nusach: Nusach, current: ServiceSlot, onOpen: (SiddurNo
         ServiceSlot.SHABBAT_MUSAF, ServiceSlot.SHABBAT_MINCHA, ServiceSlot.HAVDALAH, ServiceSlot.BEDTIME_SHEMA,
     ) else listOf(ServiceSlot.SHACHARIT, ServiceSlot.MINCHA, ServiceSlot.MAARIV, ServiceSlot.BEDTIME_SHEMA)
     val tiles = remember(nusach) { slots.mapNotNull { slot -> container.siddur.node(slot, nusach)?.let { slot to it } } }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SectionHeading("Services", "תפילות")
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(150.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            userScrollEnabled = false,
-            modifier = Modifier.heightIn(max = 2000.dp),
-        ) {
-            items(tiles, key = { it.first.name }) { (slot, node) ->
-                ServiceTile(slot, node, highlighted = slot == current) { onOpen(node) }
+    BoxWithConstraints {
+        val columns = maxOf(1, (maxWidth / 162.dp).toInt())
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionHeading("Services", hebrew = "תפילות")
+            tiles.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    row.forEach { (slot, node) ->
+                        ServiceTile(slot, node, highlighted = slot == current, onClick = { onOpen(node) }, modifier = Modifier.weight(1f))
+                    }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ServiceTile(slot: ServiceSlot, node: SiddurNode, highlighted: Boolean, onClick: () -> Unit) {
+private fun ServiceTile(slot: ServiceSlot, node: SiddurNode, highlighted: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val container = LocalAppContainer.current
     val settings by container.settings.state.collectAsStateWithLifecycle()
     val shape = RoundedCornerShape(24.dp)
     val fg = if (highlighted) Color.White else MaterialTheme.colorScheme.onSurface
     val secondary = if (highlighted) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
-        Modifier
+        modifier
             .shadow(if (highlighted) 14.dp else 6.dp, shape, spotColor = Color.Black.copy(alpha = if (highlighted) 0.25f else 0.1f))
             .clip(shape)
             .then(if (highlighted) Modifier.background(Brush.linearGradient(listOf(Brand, BrandDeep))) else Modifier.background(glassColor()))

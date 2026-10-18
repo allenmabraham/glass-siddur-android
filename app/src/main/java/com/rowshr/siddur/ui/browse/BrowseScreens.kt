@@ -115,7 +115,7 @@ private fun SectionList(nav: NavHostController, nusach: Nusach, node: SiddurNode
         if (showReadAll) {
             item {
                 Box(Modifier.fillMaxWidth().padding(bottom = 8.dp), contentAlignment = Alignment.Center) {
-                    BrandButton("Read all of ${node.title}", Icons.Filled.MenuBook, Modifier.fillMaxWidth().readableWidth(520.dp)) { nav.openReader(nusach, node.id) }
+                    BrandButton("Read all of ${node.title}", Modifier.fillMaxWidth().readableWidth(520.dp), Icons.Filled.MenuBook) { nav.openReader(nusach, node.id) }
                 }
             }
         }
